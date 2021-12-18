@@ -6,6 +6,8 @@ function createWindow() {
     const mainWindow = new BrowserWindow({
         height: 600,
         width: 800,
+        frame: false,
+        // transparent: true,
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),
             nodeIntegration: true
@@ -18,6 +20,9 @@ function createWindow() {
     // Open the DevTools.
     mainWindow.webContents.openDevTools();
 }
+
+// app.commandLine.appendSwitch('enable-transparent-visuals');
+// app.commandLine.appendSwitch('disable-gpu');
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
