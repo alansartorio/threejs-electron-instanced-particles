@@ -1,7 +1,8 @@
-import { BoxGeometry, BufferAttribute, BufferGeometry, Clock, InstancedMesh, Matrix4, Mesh, MeshBasicMaterial, OrthographicCamera, PerspectiveCamera, Scene, TriangleFanDrawMode, WebGLRenderer } from 'three';
+import { BoxGeometry, BufferAttribute, BufferGeometry, Clock, InstancedMesh, Matrix4, Mesh, MeshBasicMaterial, OrthographicCamera, PerspectiveCamera, PlaneBufferGeometry, Scene, ShaderMaterial, TriangleFanDrawMode, WebGLRenderer } from 'three';
 import './index.css'
 import { toTrianglesDrawMode } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { ipcRenderer } from 'electron';
+import backgroundShader from './background.glsl';
 
 const renderer = new WebGLRenderer({
     // antialias: true, alpha: true,
@@ -26,10 +27,27 @@ document.body.appendChild(renderer.domElement);
 
 
 
+{
+    const material = new ShaderMaterial({
+        vertexShader: `
+          varying vec2 vUv;
+          
+          void main() {
+              vUv = uv;
+              gl_Position = vec4( position, 1.0 );    
+          }
+        `,
+        fragmentShader: backgroundShader
+    });
+
+    const quad = new Mesh(new PlaneBufferGeometry(2, 2, 1, 1), material);
+    scene.add(quad);
+}
+
 
 let time = 0;
 let timer = 0;
-const defaultBlobLength = 100;
+const defaultBlobLength = 200;
 
 type BlobData = {
     x: number;
@@ -45,7 +63,7 @@ function createBlob(width: number, height: number): BlobData {
         y: -Math.sqrt((length / 2) ** 2 / 2) - 100,
         x: Math.random() * (width + height) - height,
         scale: scale,
-        speed: Math.random() * 150 + 100,
+        speed: Math.random() * 25 + 10,
     };
 }
 
@@ -131,7 +149,7 @@ const tick = (dt: number) => {
     if (time >= timer) {
         time -= timer;
         blobs.push(createBlob(width, height));
-        timer = Math.random() * 0.05;
+        timer = Math.random() * 0.5;
     }
 
     for (const blob of blobs) {
