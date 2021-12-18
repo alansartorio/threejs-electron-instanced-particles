@@ -48,12 +48,12 @@ module.exports = [
       filename: "main-bundle.js",
     },
   }),
-  // Object.assign({}, common, {
-  //   target: "node",
-  //   entry: "./src/main/preload.ts",
-  //   output: {
-  //     path: path.resolve(__dirname, "dist"),
-  //     filename: "preload.js",
-  //   },
-  // }),
+  Object.assign({}, common, {
+    target: "node",
+    entry: "./src/main/preload.ts",
+    output: {
+      path: path.resolve(__dirname, "dist"),
+      filename: "preload.js",
+    },
+  }),
 ];
