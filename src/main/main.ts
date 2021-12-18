@@ -1,6 +1,7 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain, powerMonitor, } from "electron";
 import * as path from "path";
 import electron from 'electron';
+
 
 async function createWindow() {
     const { width, height } = electron.screen.getPrimaryDisplay().workAreaSize;
@@ -20,8 +21,10 @@ async function createWindow() {
         // transparent: true,
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),
-            nodeIntegration: true
+            nodeIntegration: true,
+            contextIsolation: false
         },
+
     });
 
     // and load the index.html of the app.
@@ -29,15 +32,27 @@ async function createWindow() {
 
     // Open the DevTools.
     // mainWindow.webContents.openDevTools();
+
+    let previouslyIdle = false;
+    setInterval(() => {
+        const idleSeconds = powerMonitor.getSystemIdleTime();
+        // console.log(idleSeconds);
+        const idle = idleSeconds > 60;
+        if (idle != previouslyIdle) {
+            mainWindow.webContents.send('getSystemIdleTimeResponse', idle);
+            previouslyIdle = idle;
+        }
+    }, 1000);
 }
 
+// app.commandLine.appendSwitch('limit-fps', '10');
 // app.commandLine.appendSwitch('enable-transparent-visuals');
 // app.commandLine.appendSwitch('disable-gpu');
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on("ready", () => {
+app.whenReady().then(() => {
     createWindow();
 
     app.on("activate", function () {

@@ -1,14 +1,14 @@
-import { BoxGeometry, BufferAttribute, BufferGeometry, InstancedMesh, Matrix4, Mesh, MeshBasicMaterial, OrthographicCamera, PerspectiveCamera, Scene, TriangleFanDrawMode, WebGLRenderer } from 'three';
+import { BoxGeometry, BufferAttribute, BufferGeometry, Clock, InstancedMesh, Matrix4, Mesh, MeshBasicMaterial, OrthographicCamera, PerspectiveCamera, Scene, TriangleFanDrawMode, WebGLRenderer } from 'three';
 import './index.css'
 import { toTrianglesDrawMode } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { ipcRenderer } from 'electron';
 
-const renderer = new WebGLRenderer({ antialias: true, alpha: true });
+const renderer = new WebGLRenderer({
+    // antialias: true, alpha: true,
+});
 renderer.setClearColor('#7d2de3');
 // renderer.setClearAlpha(0);
 const scene = new Scene();
-
-
-
 const camera = new OrthographicCamera(
     0,
     window.innerWidth, window.innerHeight,
@@ -29,7 +29,7 @@ document.body.appendChild(renderer.domElement);
 
 let time = 0;
 let timer = 0;
-const defaultBlobLength = 400;
+const defaultBlobLength = 100;
 
 type BlobData = {
     x: number;
@@ -42,15 +42,15 @@ function createBlob(width: number, height: number): BlobData {
     const scale = 2 ** (Math.random() * 2 - 1);
     const length = defaultBlobLength * scale;
     return {
-        x: -Math.sqrt((length / 2) ** 2 / 2) - 100,
-        y: Math.random() * (width + height) - width,
+        y: -Math.sqrt((length / 2) ** 2 / 2) - 100,
+        x: Math.random() * (width + height) - height,
         scale: scale,
         speed: Math.random() * 150 + 100,
     };
 }
 
 function isBlobInside(blob: BlobData, width: number, height: number) {
-    return blob.x <= width + defaultBlobLength * 2;
+    return blob.y <= height + defaultBlobLength * 2;
 }
 let blobs: BlobData[] = [];
 
@@ -67,14 +67,7 @@ function pillGeometry() {
     }
     verticesGenerated.push([-1, 1]);
     verticesGenerated.push([1, 1]);
-    for (let a = 0; a < Math.PI; a += 0.1) {
-        verticesGenerated.push([
-            Math.cos(-a + Math.PI / 2) * 1 + 1,
-            Math.sin(-a + Math.PI / 2) * 1,
-        ]);
-    }
-    verticesGenerated.push([1, -1]);
-    verticesGenerated.push([-1, -1]);
+    verticesGenerated.push(...verticesGenerated.map<[number, number]>(([x, y]) => [-x, -y]));
     verticesGenerated.push([0, 0]);
     const vertices = new Float32Array(
         verticesGenerated
@@ -94,7 +87,7 @@ const material = new MeshBasicMaterial({
     opacity: 0.1,
     color: "black",
 });
-const cube = new InstancedMesh(geometry, material, 10000);
+const cube = new InstancedMesh(geometry, material, 1000);
 
 function setPositions(positions: BlobData[]) {
     cube.count = positions.length;
@@ -117,14 +110,28 @@ cube.geometry = toTrianglesDrawMode(cube.geometry, TriangleFanDrawMode);
 cube.position.set(0, 0, 0);
 
 scene.add(cube);
+let frame = 0;
 
+
+
+let idle = false;
+ipcRenderer.on('getSystemIdleTimeResponse', function (event, arg) {
+    console.log('IDLE', arg);
+    idle = arg;
+    if (idle)
+        clock.stop()
+    else
+        clock.start()
+})
+
+const clock = new Clock();
 const tick = (dt: number) => {
     const { innerWidth: width, innerHeight: height } = window;
 
     if (time >= timer) {
         time -= timer;
         blobs.push(createBlob(width, height));
-        timer = Math.random() * 0.5 + 0.25;
+        timer = Math.random() * 0.05;
     }
 
     for (const blob of blobs) {
@@ -134,17 +141,30 @@ const tick = (dt: number) => {
 
     blobs = blobs.filter((blob) => isBlobInside(blob, width, height));
     time += dt;
-
+    frame++;
     setPositions(blobs);
+    if (frame % 60 == 0) {
+        // console.log(blobs.length);
+        // console.log(1 / dt);
+    }
+    // if (frame % 1000 == 0) {
+
+    //     ipcRenderer.send('getSystemIdleTime');
+    // }
+
+    // if (1 / dt > 144)
+    // console.log(1 / dt);
+
 };
 
-let prevTime = Date.now();
 function animate() {
+    // setTimeout(() => requestAnimationFrame(animate), 13);
     requestAnimationFrame(animate);
+    if (idle) {
+        return;
+    }
 
-    const time = Date.now();
-    tick((time - prevTime) / 1000);
-    prevTime = time;
+    tick(clock.getDelta());
 
     renderer.render(scene, camera);
 }
