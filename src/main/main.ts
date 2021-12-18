@@ -1,11 +1,21 @@
 import { app, BrowserWindow } from "electron";
 import * as path from "path";
+import electron from 'electron';
 
-function createWindow() {
+async function createWindow() {
+    const { width, height } = electron.screen.getPrimaryDisplay().workAreaSize;
     // Create the browser window.
     const mainWindow = new BrowserWindow({
-        height: 600,
-        width: 800,
+        x: 0,
+        y: 0,
+        width: width * 2, height,
+        fullscreen: true,
+        enableLargerThanScreen: true,
+        simpleFullscreen: true,
+        type: 'desktop',
+        title: 'background-blobs',
+        // height: 600,
+        // width: 800,
         frame: false,
         // transparent: true,
         webPreferences: {
@@ -18,7 +28,7 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, "index.html"));
 
     // Open the DevTools.
-    mainWindow.webContents.openDevTools();
+    // mainWindow.webContents.openDevTools();
 }
 
 // app.commandLine.appendSwitch('enable-transparent-visuals');

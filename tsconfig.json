@@ -17,7 +17,8 @@
         },
         "typeRoots": [
             "src/renderer/definitions.d.ts"
-        ]
+        ],
+        "esModuleInterop": true,
     },
     "include": [
         "src/**/*"
