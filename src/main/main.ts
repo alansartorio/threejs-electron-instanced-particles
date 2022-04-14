@@ -4,12 +4,12 @@ import electron from 'electron';
 
 
 async function createWindow() {
-    const { width, height } = electron.screen.getPrimaryDisplay().workAreaSize;
+    //const { width, height } = electron.screen.getPrimaryDisplay().workAreaSize;
     // Create the browser window.
     const mainWindow = new BrowserWindow({
-        x: 0,
-        y: 0,
-        width: width * 2, height,
+        //x: 0,
+        //y: 0,
+        //width: width * 2, height,
         // fullscreen: true,
         // enableLargerThanScreen: true,
         // simpleFullscreen: true,
@@ -24,7 +24,6 @@ async function createWindow() {
             nodeIntegration: true,
             contextIsolation: false
         },
-
     });
 
     // and load the index.html of the app.

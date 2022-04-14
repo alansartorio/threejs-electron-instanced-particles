@@ -25,6 +25,9 @@ const common = {
       },
     ],
   },
+  resolve: {
+    extensions: [".ts", "..."],
+  },
 };
 
 module.exports = [
