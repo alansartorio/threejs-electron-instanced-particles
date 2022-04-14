@@ -4,6 +4,7 @@ const path = require("path");
 
 const common = {
   devtool: "inline-source-map",
+  mode: "development",
   module: {
     rules: [
       {
