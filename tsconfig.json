@@ -6,7 +6,7 @@
             "DOM"
         ],
         "module": "commonjs",
-        "noImplicitAny": true,
+        "noImplicitAny": false,
         "sourceMap": true,
         "outDir": "dist",
         "baseUrl": ".",

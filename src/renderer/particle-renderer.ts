@@ -14,6 +14,7 @@ import {
 } from "three";
 import "./index.css";
 import backgroundShader from "./background.glsl";
+import CCapture from "ccapture.js-npmfixed";
 
 type Sides = { top: number; left: number; bottom: number; right: number };
 
@@ -45,8 +46,8 @@ class FixedAspectRatio {
     return { width, height };
   }
 
-  resize() {
-    let bestSize = this.maximumSizeFor(screenSize());
+  resize(width: number, height: number) {
+    let bestSize = this.maximumSizeFor({ width, height });
 
     this.renderer.setSize(bestSize.width, bestSize.height);
   }
@@ -61,12 +62,16 @@ export class ParticleRenderer {
   scene: Scene;
   clock: Clock;
   maxParticleCount: number;
+  capturer: any;
+  canvasSize: { width: number; height: number };
 
   constructor(
     borders: Sides,
     particleGeometry: BufferGeometry,
     particleMaterial: Material,
-    maxParticleCount: number
+    maxParticleCount: number,
+    record: boolean,
+    canvasSize?: { width: number; height: number }
   ) {
     this.maxParticleCount = maxParticleCount;
     this.particlesMesh = new InstancedMesh(
@@ -77,6 +82,13 @@ export class ParticleRenderer {
     this.borders = borders;
     this.init();
     this.clock = new Clock();
+    if (record) this.capturer = new CCapture({ format: "webm", framerate: 60 });
+
+    this.canvasSize = canvasSize;
+    if (this.canvasSize !== undefined) {
+      this.canvasResizer.resize(this.canvasSize.width, this.canvasSize.height);
+    }
+    this.onResize();
   }
 
   init() {
@@ -106,10 +118,9 @@ export class ParticleRenderer {
     this.canvasResizer = canvasResizer;
     this.camera = camera;
     this.scene = scene;
-    //this.initBackground();
+    this.initBackground();
 
     window.addEventListener("resize", this.onResize.bind(this), false);
-    this.onResize();
   }
 
   initBackground() {
@@ -151,18 +162,32 @@ export class ParticleRenderer {
     this.renderer.render(this.scene, this.camera);
   }
 
-  animate(frameCallback: (dt: number) => void) {
-    // setTimeout(() => requestAnimationFrame(animate), 13);
-    requestAnimationFrame(this.animate.bind(this, frameCallback));
+  startAnimation(frameCallback: (dt: number) => void, frames: number) {
+    this.capturer?.start();
+    this.animate(frameCallback, frames);
+  }
 
+  animate(frameCallback: (dt: number) => void, framesLeft: number) {
+    if (framesLeft == 0) {
+      this.capturer?.stop();
+      this.capturer?.save();
+    } else {
+      // setTimeout(() => requestAnimationFrame(animate), 13);
+      requestAnimationFrame(
+        this.animate.bind(this, frameCallback, framesLeft - 1)
+      );
+    }
     frameCallback(this.clock.getDelta());
-
     this.render();
+    this.capturer?.capture(this.renderer.domElement);
   }
 
   onResize() {
     this.camera.updateProjectionMatrix();
-    this.canvasResizer.resize();
+    if (this.canvasSize === undefined) {
+      let size = screenSize();
+      this.canvasResizer.resize(size.width, size.height);
+    }
   }
 }
 

@@ -2,10 +2,13 @@ import {
   BufferAttribute,
   BufferGeometry,
   MeshBasicMaterial,
+  ShaderMaterial,
   TriangleFanDrawMode,
 } from "three";
 import { toTrianglesDrawMode } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { randFloat } from "three/src/math/MathUtils";
 import { Particle, ParticleRenderer } from "./particle-renderer";
+//import particleShader from "./particleShader.glsl";
 
 // Creates pill geometry.
 function pillGeometry() {
@@ -40,9 +43,22 @@ let geometry = pillGeometry();
 geometry = toTrianglesDrawMode(geometry, TriangleFanDrawMode);
 
 const material = new MeshBasicMaterial({
-  // wireframe: true,
+  //wireframe: true,
+  //wireframeLinewidth: 2,
   color: "white",
 });
+//const material = new ShaderMaterial({
+//vertexShader: `
+//void main() {
+	//gl_Position = vec4( position, 0.0 );
+//}
+//`,
+//fragmentShader: `
+//void main() {
+	//gl_FragColor = vec4( 0.0, 0.0, 0.0, 1.0 );
+//}
+//`,
+//});
 
 let renderer = new ParticleRenderer(
   {
@@ -53,7 +69,10 @@ let renderer = new ParticleRenderer(
   },
   geometry,
   material,
-  10000
+  100,
+  false,
+  undefined
+  //{ width: 1000, height: 1000 }
 );
 document.body.children[0].appendChild(renderer.renderer.domElement);
 
@@ -62,12 +81,16 @@ let time = 0;
 let timer = 0;
 
 let particles: Particle[] = [
-  new Particle(0, 0),
-  new Particle(50, 0),
-  new Particle(0, 20),
-  new Particle(30, 60),
-  new Particle(-10, -70),
+  //new Particle(0, 0),
+  //new Particle(50, 0),
+  //new Particle(0, 20),
+  //new Particle(30, 60),
+  //new Particle(-10, -70),
 ];
+
+for (let i = 0; i < 100; i++) {
+  particles.push(new Particle(randFloat(-100, 100), randFloat(-100, 100)));
+}
 
 const tick = (dt: number) => {
   // Grab next frame's particles and send to renderer.
@@ -83,8 +106,8 @@ const tick = (dt: number) => {
   frame++;
 
   // Show FPS
-  // if (1 / dt > 144)
-  // console.log(1 / dt);
+  //if (1 / dt > 144)
+  console.log(1 / dt);
 };
 
-renderer.animate(tick);
+renderer.startAnimation(tick, 100);

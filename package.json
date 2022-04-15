@@ -4,6 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
+    "ccapture.js-npmfixed": "^1.1.0",
     "electron": "^16.0.5",
     "three": "^0.135.0",
     "typescript": "^4.5.4"
